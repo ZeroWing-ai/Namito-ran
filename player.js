@@ -13,6 +13,9 @@ export class Player {
         this.jumpForce = 15;
         this.moveSpeed = 20;
 
+        // Checkpoint State
+        this.lastCheckpoint = new THREE.Vector3(0, 5, 0);
+
         // Speeds - Adjusted for easier control
         this.baseSpeed = 10;
         this.sprintSpeed = 18;
@@ -201,8 +204,8 @@ export class Player {
 
         // Wall/Map Bounds (Optional: fall off world)
         if (this.position.y < -50) {
-            // Reset
-            this.position.set(0, 5, 0);
+            // Respawn at Checkpoint
+            this.position.copy(this.lastCheckpoint);
             this.velocity.set(0, 0, 0);
         }
 
@@ -263,6 +266,19 @@ export class Player {
             playerBox.max.set(center.x + 0.5, center.y + 0.2, center.z + 0.5);
 
             if (box.intersectsBox(playerBox)) {
+
+                // Checkpoint Logic
+                if (platform.type === 'checkpoint') {
+                    // Activate Checkpoint
+                    if (this.lastCheckpoint.distanceTo(platform.mesh.position) > 5) {
+                        this.lastCheckpoint.copy(platform.mesh.position);
+                        this.lastCheckpoint.y += 5; // Spawn slightly above
+                        platform.mesh.material.color.setHex(0x00ff00); // Turn Green
+                        platform.mesh.material.emissive.setHex(0x00ff00);
+                    }
+                    continue; // Pass through
+                }
+
                 // Determine collision side
 
                 // Box Top

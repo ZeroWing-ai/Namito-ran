@@ -72,6 +72,25 @@ export class World {
         return platform;
     }
 
+    spawnCheckpoint(x, y, z) {
+        // Visual: Neon Cylinder Gate
+        const geometry = new THREE.CylinderGeometry(0.5, 0.5, 4, 16);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+        const checkpoint = new THREE.Mesh(geometry, material);
+        checkpoint.position.set(x, y + 2, z);
+
+        // Add light
+        const light = new THREE.PointLight(0x00ffff, 1, 10);
+        light.position.set(0, 0, 0);
+        checkpoint.add(light);
+
+        this.scene.add(checkpoint);
+        const box = new THREE.Box3().setFromObject(checkpoint);
+        box.expandByScalar(1);
+
+        this.platforms.push({ mesh: checkpoint, boundingBox: box, type: 'checkpoint' });
+    }
+
     generateNextChunk() {
         // Decide segment type
         const rand = Math.random();
@@ -112,6 +131,9 @@ export class World {
     }
 
     generateGuidedSegment() {
+        // Checkpoint
+        this.spawnCheckpoint(0, 0, this.lastChunkZ - 2);
+
         // Platforms with Guard Rails
         const count = 3;
         let currentZ = this.lastChunkZ;
@@ -170,6 +192,9 @@ export class World {
     }
 
     generateFlatRunSegment() {
+        // Checkpoint
+        this.spawnCheckpoint(0, 0, this.lastChunkZ - 2);
+
         const gap = 4;
         const depth = 60 + Math.random() * 40;
         const width = 12;
@@ -186,6 +211,9 @@ export class World {
     }
 
     generateSlideSegment() {
+        // Checkpoint
+        this.spawnCheckpoint(0, 0, this.lastChunkZ - 2);
+
         const count = 3;
         let currentZ = this.lastChunkZ;
         const color = 0xff00ff;
@@ -214,6 +242,9 @@ export class World {
     }
 
     generateDodgeSegment() {
+        // Checkpoint
+        this.spawnCheckpoint(0, 0, this.lastChunkZ - 2);
+
         const gap = 4;
         const depth = 50;
         const width = 20;
