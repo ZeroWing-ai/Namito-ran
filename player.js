@@ -5,14 +5,28 @@ export class Player {
         this.camera = camera;
         this.scene = scene;
 
+
         // Physics
         this.position = new THREE.Vector3(0, 5, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.gravity = -30;
         this.jumpForce = 15;
         this.moveSpeed = 20;
+
+        // Speeds - Adjusted for easier control
+        this.baseSpeed = 10;
+        this.sprintSpeed = 18;
+        this.crouchSpeed = 6;
+        this.currentSpeed = this.baseSpeed;
+
         this.radius = 1;
-        this.height = 2; // Camera height offset from "feet"
+        this.normalHeight = 2;
+        this.crouchHeight = 1;
+        this.height = this.normalHeight;
+
+        // Visuals
+        this.baseFOV = 75;
+        this.sprintFOV = 85;
 
         this.onGround = false;
 
@@ -21,9 +35,12 @@ export class Player {
         this.moveBackward = false;
         this.moveLeft = false;
         this.moveRight = false;
+        this.isSprinting = false;
+        this.isCrouching = false;
         this.spacePressed = false;
 
         this.initInput();
+
         this.createBody();
         this.lockPointer();
     }
@@ -57,10 +74,15 @@ export class Player {
             case 'KeyA': this.moveLeft = true; break;
             case 'ArrowDown':
             case 'KeyS': this.moveBackward = true; break;
+
             case 'ArrowRight':
             case 'KeyD': this.moveRight = true; break;
+            case 'ShiftLeft':
+            case 'ShiftRight': this.isSprinting = true; break;
+            case 'KeyC':
+            case 'ControlLeft': this.isCrouching = true; break;
             case 'Space':
-                if (this.onGround) {
+                if (this.onGround && !this.isCrouching) {
                     this.velocity.y = this.jumpForce;
                     this.onGround = false;
                 }
@@ -78,8 +100,13 @@ export class Player {
             case 'KeyS': this.moveBackward = false; break;
             case 'ArrowRight':
             case 'KeyD': this.moveRight = false; break;
+            case 'ShiftLeft':
+            case 'ShiftRight': this.isSprinting = false; break;
+            case 'KeyC':
+            case 'ControlLeft': this.isCrouching = false; break;
         }
     }
+
 
 
     createBody() {
@@ -119,10 +146,26 @@ export class Player {
         this.scene.add(this.camera);
     }
 
+
     update(delta, platforms) {
         // Friction / Damping
         this.velocity.x -= this.velocity.x * 10 * delta;
         this.velocity.z -= this.velocity.z * 10 * delta;
+
+        // Handle Crouch Height
+        const targetHeight = this.isCrouching ? this.crouchHeight : this.normalHeight;
+        this.height += (targetHeight - this.height) * 10 * delta;
+
+        // Target Speed & FOV
+        let targetSpeed = this.baseSpeed;
+        if (this.isSprinting && !this.isCrouching) targetSpeed = this.sprintSpeed;
+        if (this.isCrouching) targetSpeed = this.crouchSpeed;
+
+        this.currentSpeed += (targetSpeed - this.currentSpeed) * 5 * delta;
+
+        const targetFOV = (this.isSprinting && !this.isCrouching) ? this.sprintFOV : this.baseFOV;
+        this.camera.fov += (targetFOV - this.camera.fov) * 5 * delta;
+        this.camera.updateProjectionMatrix();
 
         // Input Movement (Relative to Camera look)
         const direction = new THREE.Vector3();
@@ -137,14 +180,15 @@ export class Player {
 
         if (this.moveForward || this.moveBackward) {
             const v = direction.clone().applyEuler(new THREE.Euler(0, this.camera.rotation.y, 0));
-            this.velocity.x += v.x * this.moveSpeed * delta * 50; // Acceleration
-            this.velocity.z += v.z * this.moveSpeed * delta * 50;
+            this.velocity.x += v.x * this.currentSpeed * delta * 50;
+            this.velocity.z += v.z * this.currentSpeed * delta * 50;
         }
         if (this.moveLeft || this.moveRight) {
             const v = direction.clone().applyEuler(new THREE.Euler(0, this.camera.rotation.y, 0));
-            this.velocity.x += v.x * this.moveSpeed * delta * 50;
-            this.velocity.z += v.z * this.moveSpeed * delta * 50;
+            this.velocity.x += v.x * this.currentSpeed * delta * 40; // Reduced lateral speed
+            this.velocity.z += v.z * this.currentSpeed * delta * 40;
         }
+
 
         // Gravity
         this.velocity.y += this.gravity * delta;
@@ -162,11 +206,25 @@ export class Player {
             this.velocity.set(0, 0, 0);
         }
 
+
         // Collision Detection
         this.checkCollisions(platforms);
 
-        // Update Camera
+        // Update Camera Position
         this.camera.position.copy(this.position);
+
+        // Screen Shake (based on speed magnitude)
+        if (isMoving && this.onGround) {
+            const speedRatio = (this.currentSpeed - this.baseSpeed) / (this.sprintSpeed - this.baseSpeed);
+            // Shake intensity increases with sprint
+            const shakeAmount = Math.max(0, speedRatio) * 0.05;
+
+            if (shakeAmount > 0) {
+                this.camera.position.x += (Math.random() - 0.5) * shakeAmount;
+                this.camera.position.y += (Math.random() - 0.5) * shakeAmount;
+            }
+        }
+
 
         // Animate Hands & Feet
         const time = Date.now() * 0.01;
@@ -195,27 +253,25 @@ export class Player {
 
         for (const platform of platforms) {
             const box = platform.boundingBox;
+
             const playerBox = new THREE.Box3();
             const center = this.position.clone();
-            // Player AABB roughly
-            playerBox.min.set(center.x - 0.5, center.y - 1.6, center.z - 0.5);
-            playerBox.max.set(center.x + 0.5, center.y + 0.4, center.z + 0.5);
+
+            // Player AABB based on current Height
+            // Using logic: Feet = Center.y - this.height
+            playerBox.min.set(center.x - 0.5, center.y - this.height, center.z - 0.5);
+            playerBox.max.set(center.x + 0.5, center.y + 0.2, center.z + 0.5);
 
             if (box.intersectsBox(playerBox)) {
                 // Determine collision side
-                // Simple logic: if we are clearly above, it's a landing (if falling)
-                // If we are intersecting but not above, it's a wall.
 
-                // Check if we were previously above? Hard without history.
-                // Check relative Y.
                 // Box Top
                 const boxTop = box.max.y;
-                const feetY = this.position.y - 1.6;
-                const prevFeetY = (this.position.y - 1.6) - (this.velocity.y * 0.016); // Approx prev Frame
+                const feetY = this.position.y - this.height;
 
                 // If feet are near top and we are falling...
                 if (feetY >= boxTop - 0.5 && this.velocity.y <= 0) {
-                    this.position.y = boxTop + 1.6;
+                    this.position.y = boxTop + this.height; // Stand on top
                     this.velocity.y = 0;
                     this.onGround = true;
                 } else {

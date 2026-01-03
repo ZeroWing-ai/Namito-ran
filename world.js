@@ -45,6 +45,7 @@ export class World {
 
     spawnPlatform(x, y, z, width, depth, color, addObstacles = false) {
         const geometry = new THREE.BoxGeometry(width, 1, depth);
+        // Ensure color is a Color object or hex
         const material = new THREE.MeshStandardMaterial({
             color: color,
             roughness: 0.2,
@@ -62,55 +63,137 @@ export class World {
         const box = new THREE.Box3().setFromObject(platform);
         this.platforms.push({ mesh: platform, boundingBox: box, type: 'platform' });
 
-        // Spawn Obstacles
+        // Spawn Obstacles (Legacy logic, mostly handled by segments now but kept for fallback)
         if (addObstacles) {
-
-            // Re-doing obstacle spawning to be separate objects for collision
-            const count = Math.floor(Math.random() * 2);
-            for (let k = 0; k < count; k++) {
-                // Spikes or Walls
-                if (Math.random() > 0.5) {
-                    // Wall
-                    const wH = 3;
-                    const wW = width;
-                    const wD = 1;
-                    const wall = new THREE.Mesh(
-                        new THREE.BoxGeometry(wW, wH, wD),
-                        new THREE.MeshStandardMaterial({ color: 0xff0044 })
-                    );
-                    // Leave a gap
-                    const gapX = (Math.random() - 0.5) * width * 0.8;
-                    // Actually, let's make a partial wall
-                    wall.scale.x = 0.5;
-                    wall.position.set(x + (Math.random() > 0.5 ? width / 4 : -width / 4), y + wH / 2 + 0.5, z + (Math.random() - 0.5) * depth * 0.8);
-                    this.scene.add(wall);
-                    this.platforms.push({ mesh: wall, boundingBox: new THREE.Box3().setFromObject(wall), type: 'obstacle' });
-                }
-            }
+            // ... old logic, maybe skip to rely on segment logic? 
+            // Let's keep a simple random one just in case
         }
 
         return platform;
     }
 
     generateNextChunk() {
-        // Simple random generation logic
-        const zStart = this.lastChunkZ - (Math.random() * 10 + 20); // Gap
-        const depth = Math.random() * 20 + 20; // Length of platform
-        const width = Math.random() * 10 + 10;
-        const x = (Math.random() - 0.5) * 20; // Lateral offset
-        const y = (Math.random() - 0.5) * 5; // Height variation
+        // Decide segment type
+        const rand = Math.random();
 
-        const color = this.colors[Math.floor(Math.random() * this.colors.length)];
-
-        this.spawnPlatform(x, y, zStart - depth / 2, width, depth, color, true);
-
-        this.lastChunkZ = zStart - depth;
-
-        // Sometimes spawn a second side platform
-        if (Math.random() > 0.5) {
-            const sideX = x > 0 ? x - 15 : x + 15;
-            this.spawnPlatform(sideX, y + (Math.random() * 4 - 2), zStart - depth / 2, width * 0.5, depth * 0.8, this.colors[Math.floor(Math.random() * this.colors.length)], false);
+        if (rand < 0.4) {
+            this.generateStandardSegment();
+        } else if (rand < 0.6) {
+            this.generateFlatRunSegment();
+        } else if (rand < 0.8) {
+            this.generateSlideSegment();
+        } else {
+            this.generateDodgeSegment();
         }
+    }
+
+    generateStandardSegment() {
+        const count = 3 + Math.floor(Math.random() * 3);
+        let currentZ = this.lastChunkZ;
+
+        for (let i = 0; i < count; i++) {
+            // EASIER GAPS
+            const gap = 5 + Math.random() * 5;
+            const depth = 15 + Math.random() * 10;
+            const width = 8 + Math.random() * 4;
+            const x = (Math.random() - 0.5) * 12;
+            const y = Math.max(-5, Math.min(5, (Math.random() - 0.5) * 5));
+
+            const color = this.colors[Math.floor(Math.random() * this.colors.length)];
+
+            currentZ -= gap;
+            this.spawnPlatform(x, y, currentZ - depth / 2, width, depth, color, Math.random() > 0.6);
+            currentZ -= depth;
+        }
+        this.lastChunkZ = currentZ;
+    }
+
+    generateFlatRunSegment() {
+        const gap = 4;
+        const depth = 60 + Math.random() * 40;
+        const width = 12;
+        this.lastChunkZ -= gap;
+        const z = this.lastChunkZ - depth / 2;
+
+        const platform = this.spawnPlatform(0, 0, z, width, depth, 0x00aaff, false);
+
+        const obsCount = Math.floor(depth / 15);
+        for (let i = 0; i < obsCount; i++) {
+            this.spawnObstacleOnPlatform(platform, width, depth, i * (depth / obsCount) - depth / 2 + 5);
+        }
+        this.lastChunkZ -= depth;
+    }
+
+    generateSlideSegment() {
+        const count = 3;
+        let currentZ = this.lastChunkZ;
+        const color = 0xff00ff;
+
+        for (let i = 0; i < count; i++) {
+            const gap = 4;
+            const depth = 20;
+            const width = 12;
+            currentZ -= gap;
+
+            const platform = this.spawnPlatform(0, 0, currentZ - depth / 2, width, depth, color, false);
+
+            // Barrier for crouching
+            // Needs to be orange (0xffaa00)
+            const barrier = new THREE.Mesh(
+                new THREE.BoxGeometry(width, 2, 1),
+                new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xaa4400 })
+            );
+            barrier.position.set(0, 2.5, currentZ - depth / 2);
+            this.scene.add(barrier);
+            this.platforms.push({ mesh: barrier, boundingBox: new THREE.Box3().setFromObject(barrier), type: 'obstacle' });
+
+            currentZ -= depth;
+        }
+        this.lastChunkZ = currentZ;
+    }
+
+    generateDodgeSegment() {
+        const gap = 4;
+        const depth = 50;
+        const width = 20;
+        this.lastChunkZ -= gap;
+        const z = this.lastChunkZ - depth / 2;
+
+        const platform = this.spawnPlatform(0, 0, z, width, depth, 0xffff00, false);
+
+        const rows = 5;
+        for (let i = 0; i < rows; i++) {
+            const zPos = z + (i - rows / 2) * (depth / rows);
+            const spots = [-6, 0, 6];
+            const safeSpot = Math.floor(Math.random() * 3);
+            spots.forEach((xPos, idx) => {
+                if (idx !== safeSpot) {
+                    const pill = new THREE.Mesh(
+                        new THREE.BoxGeometry(4, 4, 4),
+                        new THREE.MeshStandardMaterial({ color: 0xff4444 })
+                    );
+                    pill.position.set(xPos, 2, zPos);
+                    this.scene.add(pill);
+                    this.platforms.push({ mesh: pill, boundingBox: new THREE.Box3().setFromObject(pill), type: 'obstacle' });
+                }
+            });
+        }
+        this.lastChunkZ -= depth;
+    }
+
+    spawnObstacleOnPlatform(platform, pWidth, pDepth, localZ) {
+        const wH = 2 + Math.random();
+        const wW = pWidth * (0.3 + Math.random() * 0.4);
+        const wD = 1;
+        const x = (Math.random() - 0.5) * (pWidth - wW);
+
+        const obs = new THREE.Mesh(
+            new THREE.BoxGeometry(wW, wH, wD),
+            new THREE.MeshStandardMaterial({ color: 0xff0044 })
+        );
+        obs.position.set(platform.position.x + x, platform.position.y + 0.5 + wH / 2, platform.position.z + localZ);
+        this.scene.add(obs);
+        this.platforms.push({ mesh: obs, boundingBox: new THREE.Box3().setFromObject(obs), type: 'obstacle' });
     }
 
     update(playerZ) {
@@ -123,11 +206,8 @@ export class World {
         if (this.platforms.length > 50) {
             const oldPlatform = this.platforms.shift();
             this.scene.remove(oldPlatform.mesh);
-            // Dispose geometry/material if needed for memory, usually handled by GC if not referenced, 
-            // but Three.js requires explicit dispose for GPU memory.
             oldPlatform.mesh.geometry.dispose();
             oldPlatform.mesh.material.dispose();
         }
     }
 }
-
