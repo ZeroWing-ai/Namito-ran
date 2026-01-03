@@ -33,7 +33,6 @@ export class World {
         plane.position.y = -50;
         this.scene.add(plane);
 
-
         // Initial Platforms
         this.spawnPlatform(0, -2, -20, 10, 50, 0x44aa88); // Start platform
 
@@ -43,9 +42,11 @@ export class World {
         this.generateGuidedSegment();      // 3. Guided rails
         this.generateStandardSegment();    // 4. Standard jump
 
-        // Resume random generation after this
+        // Generate a few random chunks ahead
+        for (let i = 0; i < 3; i++) {
+            this.generateNextChunk();
+        }
     }
-
 
 
     spawnPlatform(x, y, z, width, depth, color, addObstacles = false) {
@@ -68,12 +69,6 @@ export class World {
         const box = new THREE.Box3().setFromObject(platform);
         this.platforms.push({ mesh: platform, boundingBox: box, type: 'platform' });
 
-        // Spawn Obstacles (Legacy logic, mostly handled by segments now but kept for fallback)
-        if (addObstacles) {
-            // ... old logic, maybe skip to rely on segment logic? 
-            // Let's keep a simple random one just in case
-        }
-
         return platform;
     }
 
@@ -81,15 +76,76 @@ export class World {
         // Decide segment type
         const rand = Math.random();
 
-        if (rand < 0.4) {
+        if (rand < 0.25) {
             this.generateStandardSegment();
-        } else if (rand < 0.6) {
+        } else if (rand < 0.5) {
             this.generateFlatRunSegment();
+        } else if (rand < 0.65) {
+            this.generateSlideSegment(); // Slightly rarer
         } else if (rand < 0.8) {
-            this.generateSlideSegment();
-        } else {
             this.generateDodgeSegment();
+        } else if (rand < 0.9) {
+            this.generateWideSegment();
+        } else {
+            this.generateGuidedSegment();
         }
+    }
+
+    generateWideSegment() {
+        // Safe, massive platforms
+        const count = 2;
+        let currentZ = this.lastChunkZ;
+
+        for (let i = 0; i < count; i++) {
+            const gap = 3; // Tiny gap
+            const depth = 40;
+            const width = 30; // Very Wide
+
+            // Random Height change effectively zero or small
+            const y = (Math.random() - 0.5) * 2;
+
+            currentZ -= gap;
+            this.spawnPlatform(0, y, currentZ - depth / 2, width, depth, 0x00ffcc, false); // Green/Teal
+            currentZ -= depth;
+        }
+        this.lastChunkZ = currentZ;
+    }
+
+    generateGuidedSegment() {
+        // Platforms with Guard Rails
+        const count = 3;
+        let currentZ = this.lastChunkZ;
+
+        const color = 0xaa00ff; // Purple
+
+        for (let i = 0; i < count; i++) {
+            const gap = 5;
+            const depth = 25;
+            const width = 10;
+
+            currentZ -= gap;
+
+            // Main Platform
+            const platform = this.spawnPlatform(0, 0, currentZ - depth / 2, width, depth, color, false);
+
+            // Rails
+            const railGeo = new THREE.BoxGeometry(0.5, 1, depth);
+            const railMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x555555 });
+
+            const leftRail = new THREE.Mesh(railGeo, railMat);
+            leftRail.position.set(-width / 2 + 0.25, 1, currentZ - depth / 2);
+            this.scene.add(leftRail);
+            // Add collision to rail so you can't fall
+            this.platforms.push({ mesh: leftRail, boundingBox: new THREE.Box3().setFromObject(leftRail), type: 'obstacle' });
+
+            const rightRail = new THREE.Mesh(railGeo, railMat);
+            rightRail.position.set(width / 2 - 0.25, 1, currentZ - depth / 2);
+            this.scene.add(rightRail);
+            this.platforms.push({ mesh: rightRail, boundingBox: new THREE.Box3().setFromObject(rightRail), type: 'obstacle' });
+
+            currentZ -= depth;
+        }
+        this.lastChunkZ = currentZ;
     }
 
     generateStandardSegment() {
