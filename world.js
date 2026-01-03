@@ -33,14 +33,19 @@ export class World {
         plane.position.y = -50;
         this.scene.add(plane);
 
+
         // Initial Platforms
         this.spawnPlatform(0, -2, -20, 10, 50, 0x44aa88); // Start platform
 
-        // Generate initial chunks
-        for (let i = 0; i < 5; i++) {
-            this.generateNextChunk();
-        }
+        // Generate initial Safe Sequence
+        this.generateFlatRunSegment();     // 1. Safe continuous run
+        this.generateWideSegment();        // 2. Wide safe platforms
+        this.generateGuidedSegment();      // 3. Guided rails
+        this.generateStandardSegment();    // 4. Standard jump
+
+        // Resume random generation after this
     }
+
 
 
     spawnPlatform(x, y, z, width, depth, color, addObstacles = false) {
