@@ -35,8 +35,14 @@ export class World {
         plane.position.y = -50;
         this.scene.add(plane);
 
-        // Initial Platforms
-        this.spawnPlatform(0, -2, -20, 10, 50, 0x44aa88); // Start platform
+        // Initial Platforms - SAFE START ZONE
+        this.spawnStartZone();
+
+        // Offset for next chunks
+        // Start Zone is 20 deep centered at 0, so extends to -10.
+        // We set lastChunkZ to -10 to continue seamlessly.
+        this.lastChunkZ = -10;
+
 
         // Generate initial Safe Sequence
         this.generateFlatRunSegment();     // 1. Safe continuous run
@@ -76,6 +82,27 @@ export class World {
         this.platforms.push({ mesh: platform, boundingBox: box, type: 'platform', isCheckpointPlatform: false });
 
         return platform;
+    }
+
+    spawnStartZone() {
+        // Create a 20x20 Safe Checkpoint Platform at (0,0,0)
+        // Similar to generateCheckpointSegment but fixed position
+        const depth = 20;
+        const width = 20;
+        const z = 0;
+        const y = 0;
+
+        const color = 0x224455;
+        const platform = this.spawnPlatform(0, y, z, width, depth, color, false);
+        platform.material.emissive.setHex(0x112233);
+
+        // Mark as Checkpoint Platform
+        const platformObj = this.platforms[this.platforms.length - 1];
+        platformObj.isCheckpointPlatform = true;
+
+        // Spawn Beacon
+        const beaconObj = this.spawnCheckpoint(0, y, z);
+        platformObj.linkedBeacon = beaconObj;
     }
 
     spawnCheckpoint(x, y, z) {
