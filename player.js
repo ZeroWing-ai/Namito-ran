@@ -7,7 +7,7 @@ export class Player {
 
 
         // Physics
-        this.position = new THREE.Vector3(0, 5, 0);
+        this.position = new THREE.Vector3(0, 10, 0); // Start high to drop in
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.gravity = -30;
         this.jumpForce = 15;
@@ -209,7 +209,7 @@ export class Player {
         if (this.position.y < -50) {
             // Respawn at Checkpoint
             this.position.copy(this.lastCheckpoint);
-            this.position.y += 2; // Ensure above floor
+            this.position.y += 10; // Drop from height to prevent clipping
             this.velocity.set(0, 0, 0);
 
             // Reset Orientation to face forward (-Z)
