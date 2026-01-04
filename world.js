@@ -405,53 +405,60 @@ export class World {
         );
         obs.position.set(platform.position.x + x, platform.position.y + 0.5 + wH / 2, platform.position.z + localZ);
         this.scene.add(obs);
-        this.platforms.push({
-            mesh: obs, boundingBox: new THREE.Box3().setFromObject(obs), type: 'obstacle'     generateGoalPlaza() {
-                // Massive Celebration Plaza
-                const depth = 50;
-                const width = 50;
-                const gap = 2;
+        this.platforms.push({ mesh: obs, boundingBox: new THREE.Box3().setFromObject(obs), type: 'obstacle' });
+    }
 
-                this.lastChunkZ -= gap;
-                const z = this.lastChunkZ - depth / 2;
+    generateGoalPlaza() {
+        // Massive Celebration Plaza
+        const depth = 50;
+        const width = 50;
+        const gap = 2;
 
-                // Gold/Rainbow Platform
-                const color = 0xffd700; // Gold
-                const platform = this.spawnPlatform(0, 0, z, width, depth, color, false);
-                platform.material.emissive.setHex(0x553300);
+        this.lastChunkZ -= gap;
+        const z = this.lastChunkZ - depth / 2;
 
-                // Mark as GOAL and Checkpoint
-                const platformObj = this.platforms[this.platforms.length - 1];
-                platformObj.isCheckpointPlatform = true; // Still counts as check
-                platformObj.isGoalPlatform = true;       // Triggers Win
+        // Gold/Rainbow Platform
+        const color = 0xffd700; // Gold
+        const platform = this.spawnPlatform(0, 0, z, width, depth, color, false);
+        platform.material.emissive.setHex(0x553300);
 
-                // Decoration: Pillars
-                const pillGeo = new THREE.BoxGeometry(2, 20, 2);
-                const pillMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00afff });
-                const pillars = [-20, 20];
-                pillars.forEach(x => {
-                    const pill = new THREE.Mesh(pillGeo, pillMat);
-                    pill.position.set(x, 10, z);
-                    this.scene.add(pill);
-                });
+        // Mark as GOAL and Checkpoint
+        const platformObj = this.platforms[this.platforms.length - 1];
+        platformObj.isCheckpointPlatform = true; // Still counts as check
+        platformObj.isGoalPlatform = true;       // Triggers Win
 
-                this.lastChunkZ -= depth;
-            }
+        // Victory Light
+        const victoryLight = new THREE.PointLight(0xffaa00, 2, 100);
+        victoryLight.position.set(0, 20, z);
+        this.scene.add(victoryLight);
+
+        // Decoration: Pillars
+        const pillGeo = new THREE.BoxGeometry(2, 20, 2);
+        const pillMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00afff });
+        const pillars = [-20, 20];
+        pillars.forEach(x => {
+            const pill = new THREE.Mesh(pillGeo, pillMat);
+            pill.position.set(x, 10, z);
+            this.scene.add(pill);
         });
+
+        this.lastChunkZ -= depth;
+    }
+});
     }
 
-    update(playerZ) {
-        // Generate new chunks ahead of player
-        if (playerZ < this.lastChunkZ + this.renderDistance) {
-            this.generateNextChunk();
-        }
-
-        // Cleanup old chunks (optional optimization)
-        if (this.platforms.length > 50) {
-            const oldPlatform = this.platforms.shift();
-            this.scene.remove(oldPlatform.mesh);
-            oldPlatform.mesh.geometry.dispose();
-            oldPlatform.mesh.material.dispose();
-        }
+update(playerZ) {
+    // Generate new chunks ahead of player
+    if (playerZ < this.lastChunkZ + this.renderDistance) {
+        this.generateNextChunk();
     }
+
+    // Cleanup old chunks (optional optimization)
+    if (this.platforms.length > 50) {
+        const oldPlatform = this.platforms.shift();
+        this.scene.remove(oldPlatform.mesh);
+        oldPlatform.mesh.geometry.dispose();
+        oldPlatform.mesh.material.dispose();
+    }
+}
 }
