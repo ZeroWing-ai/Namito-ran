@@ -1,0 +1,49 @@
+/* Victory Screen */
+#victory-screen {
+    display: none;
+    /* Hidden by default */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 40px;
+    border: 4px solid #00ff00;
+    border-radius: 20px;
+    box-shadow: 0 0 50px #00ff00;
+    z-index: 200;
+    pointer-events: auto;
+    /* Enable clicking */
+}
+
+#victory-screen h1 {
+    font-family: 'Arial', sans-serif;
+    color: #fff;
+    font-size: 48px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+#victory-screen p {
+    color: #ccc;
+    font-size: 20px;
+    margin-bottom: 30px;
+}
+
+#restart-btn {
+    padding: 15px 30px;
+    font-size: 24px;
+    background: #00ff00;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#restart-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #00ff00;
+}

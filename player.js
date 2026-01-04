@@ -48,7 +48,10 @@ export class Player {
         this.initInput();
 
         this.createBody();
+        this.createBody();
         this.lockPointer();
+
+        this.isGameWon = false;
     }
 
     initInput() {
@@ -154,8 +157,15 @@ export class Player {
 
 
     update(delta, platforms) {
+        if (this.isGameWon) {
+            // Friction Stop
+            this.velocity.multiplyScalar(0.9);
+            return;
+        }
+
         // Friction / Damping
         this.velocity.x -= this.velocity.x * 10 * delta;
+
         this.velocity.z -= this.velocity.z * 10 * delta;
 
         // Handle Crouch Height
@@ -276,7 +286,13 @@ export class Player {
 
             if (box.intersectsBox(playerBox)) {
 
+                // WIN CONDITION
+                if (platform.isGoalPlatform && !this.isGameWon) {
+                    this.winGame();
+                }
+
                 // Checkpoint Logic (Floor Trigger)
+
                 if (platform.isCheckpointPlatform) {
                     // UNIQUE COLLECTION Logic
                     if (!platform.isCollected) {
@@ -340,6 +356,17 @@ export class Player {
                 }
             }
         }
+    }
+
+    winGame() {
+        this.isGameWon = true;
+
+        // Visuals
+        document.getElementById('victory-screen').style.display = 'block';
+        document.exitPointerLock();
+
+        // Update Final Progress
+        document.getElementById('progress-text').textContent = '100 / 100';
     }
 
 }

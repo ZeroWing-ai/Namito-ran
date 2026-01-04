@@ -9,7 +9,16 @@ export class World {
         this.chunkSize = 50;
         this.renderDistance = 200;
         this.lastChunkZ = -20; // Starting position
+        this.chunkSize = 50;
+        this.renderDistance = 200;
+        this.lastChunkZ = -20; // Starting position
         this.generatedChunks = 0; // Track how many segments created
+        this.isGoalGenerated = false;
+
+        this.isGoalGenerated = false;
+
+
+
 
 
         // Colors for abstract style (Bright/Neon palette)
@@ -172,9 +181,23 @@ export class World {
     }
 
     generateNextChunk() {
+        if (this.isGoalGenerated) return; // Stop after goal
+
         this.generatedChunks++;
 
+        // GOAL CHECK
+        // For Verification: changing 100 to 5 temporarily
+        // Remember to change back to 100!
+        const GOAL_TARGET = 100;
+
+        if (this.generatedChunks >= GOAL_TARGET) {
+            this.generateGoalPlaza();
+            this.isGoalGenerated = true;
+            return;
+        }
+
         // Decide segment type
+
         const rand = Math.random();
 
         // First 15 checkpoints: Easy Mode
@@ -382,7 +405,39 @@ export class World {
         );
         obs.position.set(platform.position.x + x, platform.position.y + 0.5 + wH / 2, platform.position.z + localZ);
         this.scene.add(obs);
-        this.platforms.push({ mesh: obs, boundingBox: new THREE.Box3().setFromObject(obs), type: 'obstacle' });
+        this.platforms.push({
+            mesh: obs, boundingBox: new THREE.Box3().setFromObject(obs), type: 'obstacle'     generateGoalPlaza() {
+                // Massive Celebration Plaza
+                const depth = 50;
+                const width = 50;
+                const gap = 2;
+
+                this.lastChunkZ -= gap;
+                const z = this.lastChunkZ - depth / 2;
+
+                // Gold/Rainbow Platform
+                const color = 0xffd700; // Gold
+                const platform = this.spawnPlatform(0, 0, z, width, depth, color, false);
+                platform.material.emissive.setHex(0x553300);
+
+                // Mark as GOAL and Checkpoint
+                const platformObj = this.platforms[this.platforms.length - 1];
+                platformObj.isCheckpointPlatform = true; // Still counts as check
+                platformObj.isGoalPlatform = true;       // Triggers Win
+
+                // Decoration: Pillars
+                const pillGeo = new THREE.BoxGeometry(2, 20, 2);
+                const pillMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00afff });
+                const pillars = [-20, 20];
+                pillars.forEach(x => {
+                    const pill = new THREE.Mesh(pillGeo, pillMat);
+                    pill.position.set(x, 10, z);
+                    this.scene.add(pill);
+                });
+
+                this.lastChunkZ -= depth;
+            }
+        });
     }
 
     update(playerZ) {
