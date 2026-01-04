@@ -60,6 +60,10 @@ export class Player {
         this.lockPointer();
 
         this.isGameWon = false;
+
+        // Audio
+        this.checkpointSound = new Audio('assets/sounds/checkpoint.mp3');
+        this.checkpointSound.volume = 0.4; // Low volume as requested
     }
 
     initInput() {
@@ -321,6 +325,12 @@ export class Player {
                         platform.isCollected = true;
                         this.checkpointCount++;
                         this.totalCheckpoints = 100; // Ensure set if not already
+
+                        // Play Sound (Clone to allow overlapping sounds if hitting many quickly, though unlikely here)
+                        if (this.checkpointSound) {
+                            this.checkpointSound.currentTime = 0;
+                            this.checkpointSound.play().catch(e => console.warn("Audio play failed", e));
+                        }
 
                         // WIN CONDITION (Count Reached)
                         // Trigger win if we hit 100 checkpoints, regardless of platform tag
