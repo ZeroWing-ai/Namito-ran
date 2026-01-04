@@ -64,6 +64,10 @@ export class Player {
         // Audio
         this.checkpointSound = new Audio('assets/sounds/checkpoint.mp3');
         this.checkpointSound.volume = 0.5; // Slightly louder
+
+        this.victorySound = new Audio('assets/sounds/gameclear.mp3');
+        this.victorySound.volume = 0.6; // Slightly louder distinct clear sound
+
         this.audioUnlocked = false;
     }
 
@@ -185,11 +189,8 @@ export class Player {
 
 
     update(delta, platforms) {
-        if (this.isGameWon) {
-            // Friction Stop
-            this.velocity.multiplyScalar(0.9);
-            return;
-        }
+        // ALLOW PLAYING AFTER WIN
+        // if (this.isGameWon) { return; }
 
         // --- Spawn Safety Grace Period ---
         if (this.spawnGraceTimer > 0) {
@@ -420,7 +421,13 @@ export class Player {
 
         // Visuals
         document.getElementById('victory-screen').style.display = 'block';
-        document.exitPointerLock();
+        // DO NOT stop pointer lock
+        // document.exitPointerLock();
+
+        // Audio
+        if (this.victorySound) {
+            this.victorySound.play().catch(e => console.warn("Victory sound failed", e));
+        }
 
         // Update Final Progress
         document.getElementById('progress-text').textContent = '100 / 100';
