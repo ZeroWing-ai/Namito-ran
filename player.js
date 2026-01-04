@@ -13,6 +13,9 @@ export class Player {
         this.jumpForce = 15;
         this.moveSpeed = 20;
 
+        // Spawn Safety
+        this.spawnGraceTimer = 1.0; // 1 second of "invincibility" / flight to settle physics
+
         // Checkpoint State
         this.lastCheckpoint = new THREE.Vector3(0, 5, 0); // Matches start platform
         this.checkpointCount = 1; // Start with Checkpoint 1 cleared
@@ -53,7 +56,6 @@ export class Player {
 
         this.initInput();
 
-        this.createBody();
         this.createBody();
         this.lockPointer();
 
@@ -169,6 +171,17 @@ export class Player {
             return;
         }
 
+        // --- Spawn Safety Grace Period ---
+        if (this.spawnGraceTimer > 0) {
+            this.spawnGraceTimer -= delta;
+            this.velocity.y = 0; // No gravity
+            this.onGround = true; // Pretend we are safe
+
+            // Force safe vertical alignment if we are near 0
+            // This prevents "falling through" before physics kicks in
+            if (this.position.y < 3) this.position.y = 3;
+        }
+
         // Friction / Damping
         this.velocity.x -= this.velocity.x * 10 * delta;
 
@@ -213,7 +226,10 @@ export class Player {
 
 
         // Gravity
-        this.velocity.y += this.gravity * delta;
+        // Apply AFTER grace period logic
+        if (this.spawnGraceTimer <= 0) {
+            this.velocity.y += this.gravity * delta;
+        }
 
         // Apply Position
         this.position.x += this.velocity.x * delta;

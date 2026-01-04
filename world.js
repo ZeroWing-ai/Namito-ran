@@ -66,8 +66,8 @@ export class World {
     }
 
 
-    spawnPlatform(x, y, z, width, depth, color, addObstacles = false) {
-        const geometry = new THREE.BoxGeometry(width, 1, depth);
+    spawnPlatform(x, y, z, width, depth, color, addObstacles = false, height = 1) {
+        const geometry = new THREE.BoxGeometry(width, height, depth);
         // Ensure color is a Color object or hex
         const material = new THREE.MeshStandardMaterial({
             color: color,
@@ -94,15 +94,19 @@ export class World {
     }
 
     spawnStartZone() {
-        // Create a 20x20 Safe Checkpoint Platform at (0,0,0)
-        // Similar to generateCheckpointSegment but fixed position
+        // Create a Safe Checkpoint Platform at (0,0,0) with extra thickness
         const depth = 20;
-        const width = 20;
+        const width = 30; // Wider for safety
         const z = 0;
-        const y = 0;
+        const height = 5; // Thick floor to prevent falling through
+        // We want the TOP surface to be at y=0.5 (flush with standard height 1 platforms at y=0)
+        // Standard platform at y=0 has top at 0.5.
+        // Thick platform (5) has top at y + 2.5.
+        // We want y + 2.5 = 0.5 => y = -2.0
+        const y = -2.0;
 
         const color = 0x224455;
-        const platform = this.spawnPlatform(0, y, z, width, depth, color, false);
+        const platform = this.spawnPlatform(0, y, z, width, depth, color, false, height);
         platform.material.emissive.setHex(0x112233);
 
         // Mark as Checkpoint Platform
@@ -111,7 +115,8 @@ export class World {
         platformObj.isCollected = true; // Auto-collected at start
 
         // Spawn Beacon
-        const beaconObj = this.spawnCheckpoint(0, y, z);
+        // Beacon sits on top. Top is at 0.5. Beacon should be at y=0 (spawnCheckpoint adds +2, so y=2)
+        const beaconObj = this.spawnCheckpoint(0, 0, z);
         platformObj.linkedBeacon = beaconObj;
 
         // Set to Green (Collected)
@@ -153,20 +158,22 @@ export class World {
 
     generateCheckpointSegment() {
         // Safe Zone Platform for Checkpoint
-        // Dimensions: 20x20
-        const depth = 20;
-        const width = 20;
+        const depth = 30; // Deeper safe zone
+        const width = 30; // Wider
         const gap = 2; // Small gap to separate from previous
 
         this.lastChunkZ -= gap;
         const z = this.lastChunkZ - depth / 2;
+
+        const height = 5; // Thick floor
+        const y = -2.0;   // Flush top surface
 
         // Darker "Safe" Color with Glow
         // Making it look like a high-tech landing pad
         const color = 0x224455;
 
         // Spawn Platform
-        const platform = this.spawnPlatform(0, 0, z, width, depth, color, false);
+        const platform = this.spawnPlatform(0, y, z, width, depth, color, false, height);
         platform.material.emissive.setHex(0x112233); // Slight glow
 
         // Mark as Checkpoint Trigger
