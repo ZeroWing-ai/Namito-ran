@@ -422,8 +422,8 @@ export class World {
 
     generateGoalPlaza() {
         // Massive Celebration Plaza
-        const depth = 50;
-        const width = 50;
+        const depth = 100; // Huge safe zone
+        const width = 60;  // Wide enough not to fall
         const gap = 2;
 
         this.lastChunkZ -= gap;
@@ -431,13 +431,14 @@ export class World {
 
         // Gold/Rainbow Platform
         const color = 0xffd700; // Gold
-        const platform = this.spawnPlatform(0, 0, z, width, depth, color, false);
+        // Use height 5 for safety (same as other safe floors)
+        const platform = this.spawnPlatform(0, -2.0, z, width, depth, color, false, 5);
         platform.material.emissive.setHex(0x553300);
 
         // Mark as GOAL and Checkpoint
         const platformObj = this.platforms[this.platforms.length - 1];
         platformObj.isCheckpointPlatform = true; // Still counts as check
-        platformObj.isGoalPlatform = true;       // Triggers Win
+        platformObj.isGoalPlatform = true;       // Triggers Win logic immediately on touch
 
         // Victory Light
         const victoryLight = new THREE.PointLight(0xffaa00, 2, 100);

@@ -308,19 +308,26 @@ export class Player {
 
             if (box.intersectsBox(playerBox)) {
 
-                // WIN CONDITION
+                // WIN CONDITION (Touching Goal Platform)
                 if (platform.isGoalPlatform && !this.isGameWon) {
                     this.winGame();
+                    return;
                 }
 
                 // Checkpoint Logic (Floor Trigger)
-
                 if (platform.isCheckpointPlatform) {
                     // UNIQUE COLLECTION Logic
                     if (!platform.isCollected) {
                         platform.isCollected = true;
                         this.checkpointCount++;
                         this.totalCheckpoints = 100; // Ensure set if not already
+
+                        // WIN CONDITION (Count Reached)
+                        // Trigger win if we hit 100 checkpoints, regardless of platform tag
+                        if (this.checkpointCount >= 100 && !this.isGameWon) {
+                            this.winGame();
+                            return;
+                        }
 
                         // Update UI
                         const fill = document.getElementById('progress-fill');
