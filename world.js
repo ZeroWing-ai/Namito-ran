@@ -91,6 +91,34 @@ export class World {
         this.platforms.push({ mesh: checkpoint, boundingBox: box, type: 'checkpoint' });
     }
 
+    getDifficulty() {
+        const distance = Math.abs(this.lastChunkZ);
+        // Scale 0.0 to 1.0 over 2000 units
+        return Math.min(1.0, distance / 2000);
+    }
+
+    generateCheckpointSegment() {
+        // Safe Zone Platform for Checkpoint
+        // Dimensions: 20x20
+        const depth = 20;
+        const width = 20;
+        const gap = 2; // Small gap to separate from previous
+
+        this.lastChunkZ -= gap;
+        const z = this.lastChunkZ - depth / 2;
+
+        // Darker "Safe" Color
+        const color = 0x224466;
+
+        // Spawn Platform
+        this.spawnPlatform(0, 0, z, width, depth, color, false);
+
+        // Spawn Checkpoint in center
+        this.spawnCheckpoint(0, 0, z);
+
+        this.lastChunkZ -= depth;
+    }
+
     generateNextChunk() {
         // Decide segment type
         const rand = Math.random();
@@ -111,6 +139,9 @@ export class World {
     }
 
     generateWideSegment() {
+        // Checkpoint with Safe Platform
+        this.generateCheckpointSegment();
+
         // Safe, massive platforms
         const count = 2;
         let currentZ = this.lastChunkZ;
@@ -131,8 +162,8 @@ export class World {
     }
 
     generateGuidedSegment() {
-        // Checkpoint
-        this.spawnCheckpoint(0, 0, this.lastChunkZ - 2);
+        // Checkpoint with Safe Platform
+        this.generateCheckpointSegment();
 
         // Platforms with Guard Rails
         const count = 3;
@@ -171,6 +202,10 @@ export class World {
     }
 
     generateStandardSegment() {
+        // Checkpoint with Safe Platform
+        this.generateCheckpointSegment();
+
+        const difficulty = this.getDifficulty();
         const count = 3 + Math.floor(Math.random() * 3);
         let currentZ = this.lastChunkZ;
 
@@ -192,8 +227,8 @@ export class World {
     }
 
     generateFlatRunSegment() {
-        // Checkpoint
-        this.spawnCheckpoint(0, 0, this.lastChunkZ - 2);
+        // Checkpoint with Safe Platform
+        this.generateCheckpointSegment();
 
         const gap = 4;
         const depth = 60 + Math.random() * 40;
@@ -211,8 +246,8 @@ export class World {
     }
 
     generateSlideSegment() {
-        // Checkpoint
-        this.spawnCheckpoint(0, 0, this.lastChunkZ - 2);
+        // Checkpoint with Safe Platform
+        this.generateCheckpointSegment();
 
         const count = 3;
         let currentZ = this.lastChunkZ;
@@ -242,8 +277,8 @@ export class World {
     }
 
     generateDodgeSegment() {
-        // Checkpoint
-        this.spawnCheckpoint(0, 0, this.lastChunkZ - 2);
+        // Checkpoint with Safe Platform
+        this.generateCheckpointSegment();
 
         const gap = 4;
         const depth = 50;
