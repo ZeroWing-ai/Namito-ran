@@ -29,7 +29,7 @@ export class World {
 
     init() {
         // Fog for depth
-        this.scene.fog = new THREE.Fog(0xaaccff, 20, 150);
+        // this.scene.fog = new THREE.Fog(0xaaccff, 20, 150);
         this.scene.background = new THREE.Color(0xaaccff);
 
         // Ground plane (decorative below)
@@ -444,21 +444,19 @@ export class World {
 
         this.lastChunkZ -= depth;
     }
-});
-    }
 
-update(playerZ) {
-    // Generate new chunks ahead of player
-    if (playerZ < this.lastChunkZ + this.renderDistance) {
-        this.generateNextChunk();
-    }
+    update(playerZ) {
+        // Generate new chunks ahead of player
+        if (playerZ < this.lastChunkZ + this.renderDistance) {
+            this.generateNextChunk();
+        }
 
-    // Cleanup old chunks (optional optimization)
-    if (this.platforms.length > 50) {
-        const oldPlatform = this.platforms.shift();
-        this.scene.remove(oldPlatform.mesh);
-        oldPlatform.mesh.geometry.dispose();
-        oldPlatform.mesh.material.dispose();
+        // Cleanup old chunks (optional optimization)
+        if (this.platforms.length > 50) {
+            const oldPlatform = this.platforms.shift();
+            this.scene.remove(oldPlatform.mesh);
+            oldPlatform.mesh.geometry.dispose();
+            oldPlatform.mesh.material.dispose();
+        }
     }
-}
 }
