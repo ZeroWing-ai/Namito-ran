@@ -7,16 +7,22 @@ export class Player {
 
 
         // Physics
-        this.position = new THREE.Vector3(0, 10, 0); // Start high to drop in
+        this.position = new THREE.Vector3(0, 5, 0); // Safe drop height
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.gravity = -30;
         this.jumpForce = 15;
         this.moveSpeed = 20;
 
         // Checkpoint State
-        this.lastCheckpoint = new THREE.Vector3(0, 5, 0);
-        this.checkpointCount = 0;
+        this.lastCheckpoint = new THREE.Vector3(0, 5, 0); // Matches start platform
+        this.checkpointCount = 1; // Start with Checkpoint 1 cleared
         this.totalCheckpoints = 100;
+
+        // Initialize UI
+        const fill = document.getElementById('progress-fill');
+        const text = document.getElementById('progress-text');
+        if (fill) fill.style.width = '1%';
+        if (text) text.textContent = '1 / 100';
 
 
         // Speeds - Adjusted for easier control

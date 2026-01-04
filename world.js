@@ -108,10 +108,15 @@ export class World {
         // Mark as Checkpoint Platform
         const platformObj = this.platforms[this.platforms.length - 1];
         platformObj.isCheckpointPlatform = true;
+        platformObj.isCollected = true; // Auto-collected at start
 
         // Spawn Beacon
         const beaconObj = this.spawnCheckpoint(0, y, z);
         platformObj.linkedBeacon = beaconObj;
+
+        // Set to Green (Collected)
+        beaconObj.mesh.material.color.setHex(0x00ff00);
+        beaconObj.mesh.children[0].color.setHex(0x00ff00);
     }
 
     spawnCheckpoint(x, y, z) {
