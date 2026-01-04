@@ -17,7 +17,13 @@ class Game {
         const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); // Bright global light
         this.scene.add(ambientLight);
 
+        // Hemisphere Light for natural global illumination (Sky vs Ground)
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+        hemiLight.position.set(0, 20, 0);
+        this.scene.add(hemiLight);
+
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+
         dirLight.position.set(10, 20, 10);
         this.scene.add(dirLight);
 
