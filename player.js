@@ -15,6 +15,9 @@ export class Player {
 
         // Checkpoint State
         this.lastCheckpoint = new THREE.Vector3(0, 5, 0);
+        this.checkpointCount = 0;
+        this.totalCheckpoints = 100;
+
 
         // Speeds - Adjusted for easier control
         this.baseSpeed = 10;
@@ -275,6 +278,19 @@ export class Player {
 
                 // Checkpoint Logic (Floor Trigger)
                 if (platform.isCheckpointPlatform) {
+                    // UNIQUE COLLECTION Logic
+                    if (!platform.isCollected) {
+                        platform.isCollected = true;
+                        this.checkpointCount++;
+                        this.totalCheckpoints = 100; // Ensure set if not already
+
+                        // Update UI
+                        const fill = document.getElementById('progress-fill');
+                        const text = document.getElementById('progress-text');
+                        if (fill) fill.style.width = this.checkpointCount + '%';
+                        if (text) text.textContent = this.checkpointCount + ' / ' + this.totalCheckpoints;
+                    }
+
                     // Activate Checkpoint
                     if (this.lastCheckpoint.distanceTo(platform.mesh.position) > 1) {
                         this.lastCheckpoint.copy(platform.mesh.position);

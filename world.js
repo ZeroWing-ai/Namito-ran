@@ -9,6 +9,8 @@ export class World {
         this.chunkSize = 50;
         this.renderDistance = 200;
         this.lastChunkZ = -20; // Starting position
+        this.generatedChunks = 0; // Track how many segments created
+
 
         // Colors for abstract style (Bright/Neon palette)
         this.colors = [0x00ffff, 0xff00ff, 0xffff00, 0x00ff00, 0xff5500];
@@ -143,8 +145,18 @@ export class World {
     }
 
     generateNextChunk() {
+        this.generatedChunks++;
+
         // Decide segment type
         const rand = Math.random();
+
+        // First 15 checkpoints: Easy Mode
+        if (this.generatedChunks <= 15) {
+            if (rand < 0.4) this.generateFlatRunSegment();
+            else if (rand < 0.7) this.generateWideSegment();
+            else this.generateGuidedSegment();
+            return;
+        }
 
         if (rand < 0.25) {
             this.generateStandardSegment();

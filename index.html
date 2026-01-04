@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D FPS Runner</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="progress.css">
     <script type="importmap">
         {
             "imports": {
@@ -14,7 +16,13 @@
         }
     </script>
 </head>
+
 <body>
+    <div id="progress-container">
+        <div id="progress-fill"></div>
+    </div>
+    <div id="progress-text">0 / 100</div>
+
     <div id="ui">
         <div id="crosshair">+</div>
         <div id="score">0</div>
@@ -22,4 +30,5 @@
     </div>
     <script type="module" src="main.js"></script>
 </body>
+
 </html>

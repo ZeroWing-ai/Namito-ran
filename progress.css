@@ -1,0 +1,38 @@
+/* Progress Bar Styles */
+#progress-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    z-index: 100;
+    overflow: hidden;
+}
+
+#progress-fill {
+    width: 0%;
+    /* Start at 0 */
+    height: 100%;
+    background-color: #00ff00;
+    transition: width 0.3s ease-out;
+    box-shadow: 0 0 10px #00ff00;
+}
+
+#progress-text {
+    position: absolute;
+    top: 45px;
+    /* Below the bar */
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 5px #000;
+    z-index: 100;
+    pointer-events: none;
+}
