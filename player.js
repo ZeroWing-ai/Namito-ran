@@ -326,10 +326,12 @@ export class Player {
                         this.checkpointCount++;
                         this.totalCheckpoints = 100; // Ensure set if not already
 
-                        // Play Sound (Clone to allow overlapping sounds if hitting many quickly, though unlikely here)
+                        // Play Sound (Fire and Forget 2D)
+                        // Use cloneNode to ensure overlapping sounds play fully and aren't cut off
                         if (this.checkpointSound) {
-                            this.checkpointSound.currentTime = 0;
-                            this.checkpointSound.play().catch(e => console.warn("Audio play failed", e));
+                            const sound = this.checkpointSound.cloneNode(true);
+                            sound.volume = 0.4; // Ensure volume is set on clone
+                            sound.play().catch(e => console.warn("Audio play failed", e));
                         }
 
                         // WIN CONDITION (Count Reached)
