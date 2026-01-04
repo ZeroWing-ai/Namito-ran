@@ -63,7 +63,23 @@ export class Player {
 
         // Audio
         this.checkpointSound = new Audio('assets/sounds/checkpoint.mp3');
-        this.checkpointSound.volume = 0.4; // Low volume as requested
+        this.checkpointSound.volume = 0.5; // Slightly louder
+        this.audioUnlocked = false;
+    }
+
+    unlockAudio() {
+        if (this.audioUnlocked) return;
+        // Try to play silent brief sound to unlock audio context depending on browser
+        // For HTML5 Audio element, simply calling play() inside a user interaction event works.
+        // We will try to play and immediately pause.
+        this.checkpointSound.play().then(() => {
+            this.checkpointSound.pause();
+            this.checkpointSound.currentTime = 0;
+            this.audioUnlocked = true;
+            console.log("Audio Unlocked");
+        }).catch(e => {
+            console.warn("Audio unlock failed (will retry next interaction):", e);
+        });
     }
 
     initInput() {

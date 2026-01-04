@@ -34,9 +34,12 @@ class Game {
         this.clock = new THREE.Clock();
 
         window.addEventListener('resize', () => this.onWindowResize(), false);
+        // Click to Start / Lock Pointer
         document.addEventListener('click', () => {
             document.body.classList.add('playing');
             document.body.requestPointerLock();
+            // Unlock audio on first user gesture
+            if (this.player) this.player.unlockAudio();
         });
 
         this.animate();
