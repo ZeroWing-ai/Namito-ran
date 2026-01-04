@@ -332,7 +332,7 @@ export class Player {
                 // WIN CONDITION (Touching Goal Platform)
                 if (platform.isGoalPlatform && !this.isGameWon) {
                     this.winGame();
-                    return;
+                    // Do NOT return, control must continue to physics
                 }
 
                 // Checkpoint Logic (Floor Trigger)
@@ -355,7 +355,7 @@ export class Player {
                         // Trigger win if we hit 100 checkpoints, regardless of platform tag
                         if (this.checkpointCount >= 100 && !this.isGameWon) {
                             this.winGame();
-                            return;
+                            // Do NOT return
                         }
 
                         // Update UI
