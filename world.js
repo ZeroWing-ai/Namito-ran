@@ -457,7 +457,8 @@ export class World {
         }
 
         // Cleanup old chunks (optional optimization)
-        if (this.platforms.length > 50) {
+        // Increased limit to 300 to prevent Start Zone from deleting too early
+        if (this.platforms.length > 300) {
             const oldPlatform = this.platforms.shift();
             this.scene.remove(oldPlatform.mesh);
             oldPlatform.mesh.geometry.dispose();
