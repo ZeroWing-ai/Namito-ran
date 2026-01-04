@@ -60,6 +60,10 @@ export class World {
         const platform = new THREE.Mesh(geometry, material);
         platform.position.set(x, y, z);
 
+        // Properties
+        platform.isSolid = true;
+
+
         // Add subtle glow/edge helper for "abstract" look
         const edges = new THREE.EdgesGeometry(geometry);
         const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
@@ -67,19 +71,23 @@ export class World {
 
         this.scene.add(platform);
         const box = new THREE.Box3().setFromObject(platform);
-        this.platforms.push({ mesh: platform, boundingBox: box, type: 'platform' });
+        this.platforms.push({ mesh: platform, boundingBox: box, type: 'platform', isCheckpointPlatform: false });
 
         return platform;
     }
 
     spawnCheckpoint(x, y, z) {
         // Visual: Neon Cylinder Gate
+        // ... (existing visual code)
+        // ...
+
+        // We need to return the object reference to link it
+        // But for now, let's just use the collision logic in Player to find it or rely on Floor trigger
         const geometry = new THREE.CylinderGeometry(0.5, 0.5, 4, 16);
         const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
         const checkpoint = new THREE.Mesh(geometry, material);
         checkpoint.position.set(x, y + 2, z);
 
-        // Add light
         const light = new THREE.PointLight(0x00ffff, 1, 10);
         light.position.set(0, 0, 0);
         checkpoint.add(light);
@@ -88,7 +96,10 @@ export class World {
         const box = new THREE.Box3().setFromObject(checkpoint);
         box.expandByScalar(1);
 
-        this.platforms.push({ mesh: checkpoint, boundingBox: box, type: 'checkpoint' });
+        const cpObj = { mesh: checkpoint, boundingBox: box, type: 'checkpoint_beacon' }; // Rename type to avoid double trigger if desired
+        this.platforms.push(cpObj);
+
+        return cpObj;
     }
 
     getDifficulty() {
@@ -107,14 +118,26 @@ export class World {
         this.lastChunkZ -= gap;
         const z = this.lastChunkZ - depth / 2;
 
-        // Darker "Safe" Color
-        const color = 0x224466;
+        // Darker "Safe" Color with Glow
+        // Making it look like a high-tech landing pad
+        const color = 0x224455;
 
         // Spawn Platform
-        this.spawnPlatform(0, 0, z, width, depth, color, false);
+        const platform = this.spawnPlatform(0, 0, z, width, depth, color, false);
+        platform.material.emissive.setHex(0x112233); // Slight glow
+
+        // Mark as Checkpoint Trigger
+        // The platform object in this.platforms array needs the flag
+        const platformObj = this.platforms[this.platforms.length - 1];
+        platformObj.isCheckpointPlatform = true;
+        platformObj.linkedBeacon = null; // Will link below
+
 
         // Spawn Checkpoint in center
-        this.spawnCheckpoint(0, 0, z);
+        const beaconObj = this.spawnCheckpoint(0, 0, z);
+
+        // Link beacon to platform for color change
+        platformObj.linkedBeacon = beaconObj;
 
         this.lastChunkZ -= depth;
     }

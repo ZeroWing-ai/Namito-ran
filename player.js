@@ -206,7 +206,13 @@ export class Player {
         if (this.position.y < -50) {
             // Respawn at Checkpoint
             this.position.copy(this.lastCheckpoint);
+            this.position.y += 2; // Ensure above floor
             this.velocity.set(0, 0, 0);
+
+            // Reset Orientation to face forward (-Z)
+            // We only want to reset Y rotation (yaw) to 0 or PI depending on model, usually 0 is Back, -Z is likely 0 or PI
+            // In Three.js, facing -Z is usually rotation (0,0,0) if camera is default
+            this.camera.rotation.set(0, 0, 0);
         }
 
 
@@ -267,15 +273,23 @@ export class Player {
 
             if (box.intersectsBox(playerBox)) {
 
-                // Checkpoint Logic
-                if (platform.type === 'checkpoint') {
+                // Checkpoint Logic (Floor Trigger)
+                if (platform.isCheckpointPlatform) {
                     // Activate Checkpoint
-                    if (this.lastCheckpoint.distanceTo(platform.mesh.position) > 5) {
+                    if (this.lastCheckpoint.distanceTo(platform.mesh.position) > 1) {
                         this.lastCheckpoint.copy(platform.mesh.position);
-                        this.lastCheckpoint.y += 5; // Spawn slightly above
-                        platform.mesh.material.color.setHex(0x00ff00); // Turn Green
-                        platform.mesh.material.emissive.setHex(0x00ff00);
+                        // Visual feedback
+                        if (platform.linkedBeacon) {
+                            platform.linkedBeacon.mesh.material.color.setHex(0x00ff00);
+                            platform.linkedBeacon.mesh.children[0].color.setHex(0x00ff00); // Light
+                        }
+                        // Floor feedback
+                        platform.mesh.material.emissive.setHex(0x00aa00);
                     }
+                }
+
+                // Checkpoint Beacon (Optional secondary trigger, or just ignore physics)
+                if (platform.type === 'checkpoint_beacon') {
                     continue; // Pass through
                 }
 
