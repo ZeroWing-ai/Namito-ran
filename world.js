@@ -44,6 +44,17 @@ export class World {
         plane.position.y = -50;
         this.scene.add(plane);
 
+        // --- RESTORE LIGHTING ---
+        // Ambient Light (Base brightness)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        this.scene.add(ambientLight);
+
+        // Directional Light (Sun)
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(50, 100, 50);
+        dirLight.castShadow = true;
+        this.scene.add(dirLight);
+
         // Initial Platforms - SAFE START ZONE
         this.spawnStartZone();
 
