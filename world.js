@@ -59,6 +59,11 @@ export class World {
         this.generateGuidedSegment();      // 3. Guided rails
         this.generateStandardSegment();    // 4. Standard jump
 
+        // We have manually generated 4 segments above.
+        // Start Zone (CP 1) + 4 Segments (CP 2,3,4,5).
+        // To put Goal at CP 100, we need the 99th generated segment to be the goal.
+        this.generatedChunks = 4;
+
         // Generate a few random chunks ahead
         for (let i = 0; i < 3; i++) {
             this.generateNextChunk();
@@ -126,11 +131,6 @@ export class World {
 
     spawnCheckpoint(x, y, z) {
         // Visual: Neon Cylinder Gate
-        // ... (existing visual code)
-        // ...
-
-        // We need to return the object reference to link it
-        // But for now, let's just use the collision logic in Player to find it or rely on Floor trigger
         const geometry = new THREE.CylinderGeometry(0.5, 0.5, 4, 16);
         const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
         const checkpoint = new THREE.Mesh(geometry, material);
@@ -198,9 +198,10 @@ export class World {
         this.generatedChunks++;
 
         // GOAL CHECK
-        // For Verification: changing 100 to 5 temporarily
-        // Remember to change back to 100!
-        const GOAL_TARGET = 100;
+        // Goal should be the 100th Checkpoint.
+        // Start Zone is #1.
+        // So we want the 99th Generated Segment to be the Goal Plaza.
+        const GOAL_TARGET = 99;
 
         if (this.generatedChunks >= GOAL_TARGET) {
             this.generateGoalPlaza();
